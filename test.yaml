@@ -1,0 +1,50 @@
+---
+- name: Install nginx
+  hosts: web
+  become: yes
+  
+  vars:
+    source_conf_nginx: ./index.html
+    dest_conf_nginx: /var/www/html
+    web_app: nginx
+
+  tasks:
+  - name: Ensure nginx packege is present
+    ansible.builtin.apt:
+      name: "{{ web_app }}"
+      state: present
+
+  - name: Ensure index.html is present
+    ansible.builtin.copy:
+      src: "{{ source_conf_nginx }}"
+      dest: "{{ dest_conf_nginx }}"
+    notify: Restart "{{ web_app }}"
+
+  - name: Ensure nginx service is started
+    ansible.builtin.systemd:
+      name: "{{ web_app }}"
+      state: started
+
+  handlers:
+  - name: Restart "{{ web_app }}"
+    ansible.builtin.systemd:
+      name: "{{ web_app }}"
+      state: restarted
+
+- name: install db
+  hosts: db
+  become: yes
+  
+  vars: 
+    bd_app: postgresql
+
+  tasks:
+  - name: Ensure postgresql packege is present
+    ansible.builtin.apt:
+      name: "{{ bd_app }}"
+      state: present
+
+  - name: Ensure postgresql is started
+    ansible.builtin.systemd:
+      name: "{{ bd_app }}"
+      state: started
